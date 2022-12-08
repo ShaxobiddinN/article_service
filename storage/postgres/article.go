@@ -1,34 +1,33 @@
 package postgres
 
 import (
+	"blogpost/article_service/models"
 	"errors"
-	"http-server/models"
-
 )
 
-//AddArticle...
+// AddArticle...
 func (stg Postgres) AddArticle(id string, entity models.CreateArticleModel) error {
 
 	_, err := stg.GetAuthorById(entity.AuthorID)
-			if err != nil {
-				return err
-			}
+	if err != nil {
+		return err
+	}
 
-	_,err = stg.db.Exec(`INSERT INTO article 
+	_, err = stg.db.Exec(`INSERT INTO article 
 	(id, title, body, author_id) 
-	VALUES ($1, $2, $3, $4)`, 
-	id,
-	entity.Title,
-	entity.Body,
-	entity.AuthorID,
-)
+	VALUES ($1, $2, $3, $4)`,
+		id,
+		entity.Title,
+		entity.Body,
+		entity.AuthorID,
+	)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-//GetArticleById...
+// GetArticleById...
 func (stg Postgres) GetArticleById(id string) (models.PackedArticleModel, error) {
 
 	var a models.PackedArticleModel
@@ -46,7 +45,7 @@ func (stg Postgres) GetArticleById(id string) (models.PackedArticleModel, error)
 	au.created_at, 
 	au.updated_at, 
 	au.deleted_at
-	FROM article AS ar JOIN author AS au ON ar.author_id = au.id WHERE ar.id = $1`,id).Scan(
+	FROM article AS ar JOIN author AS au ON ar.author_id = au.id WHERE ar.id = $1`, id).Scan(
 		&a.ID,
 		&a.Title,
 		&a.Body,
@@ -61,18 +60,16 @@ func (stg Postgres) GetArticleById(id string) (models.PackedArticleModel, error)
 		&a.GetAuthor.CreatedAt,
 		&a.GetAuthor.UpdateAt,
 		&a.GetAuthor.DeleteAt,
-
-
 	)
 	if err != nil {
-		return a,err
+		return a, err
 	}
 
 	// if tempMiddlename != nil {
 	// 	a.Author.Middlename = *tempMiddlename
-	// } 
+	// }
 
-	return a,nil
+	return a, nil
 }
 
 // GetArticleList ...
@@ -88,11 +85,10 @@ func (stg Postgres) GetArticleList(offset, limit int, search string) (resp []mod
 	FROM article 
 	WHERE deleted_at IS NULL AND (title ILIKE '%' || $1 || '%') OR (body ILIKE '%' || $1 || '%')
 	LIMIT $2
-	OFFSET $3`, search,limit,offset)
+	OFFSET $3`, search, limit, offset)
 	if err != nil {
-		return resp,err
+		return resp, err
 	}
-
 
 	for rows.Next() {
 		var a models.Article
@@ -107,12 +103,12 @@ func (stg Postgres) GetArticleList(offset, limit int, search string) (resp []mod
 			&a.DeleteAt,
 		)
 		if err != nil {
-			return resp,err
+			return resp, err
 		}
 		resp = append(resp, a)
 	}
 
-	return resp,err
+	return resp, err
 }
 
 // UpdateArticle ...
@@ -126,11 +122,11 @@ func (stg Postgres) UpdateArticle(entity models.UpdateArticleModel) error {
 		return err
 	}
 
-	n,err:=res.RowsAffected()
+	n, err := res.RowsAffected()
 	if err != nil {
 		return err
 	}
-	if n>0 {
+	if n > 0 {
 		return nil
 	}
 
@@ -144,11 +140,11 @@ func (stg Postgres) RemoveArticle(id string) error {
 		return err
 	}
 
-	n,err:=res.RowsAffected()
+	n, err := res.RowsAffected()
 	if err != nil {
 		return err
 	}
-	if n>0 {
+	if n > 0 {
 		return nil
 	}
 

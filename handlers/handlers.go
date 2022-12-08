@@ -1,14 +1,12 @@
 package handlers
 
 import (
-	"http-server/storage"
-	"http-server/config"
-
-
+	"blogpost/article_service/config"
+	"blogpost/article_service/storage"
 )
 
-//Handler...
-type handler struct{
+// Handler...
+type handler struct {
 	Stg storage.StorageI
 	Cfg config.Config
 }

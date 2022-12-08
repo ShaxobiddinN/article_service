@@ -4,13 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"http-server/models"
+	"blogpost/article_service/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
-
-
 
 // CreateAuthor godoc
 // @Summary     Create author

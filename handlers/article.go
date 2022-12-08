@@ -4,12 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"http-server/models"
+	"blogpost/article_service/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
-
 
 // CreateArticle godoc
 // @Summary     Create article
@@ -78,7 +77,6 @@ func (h handler) GetArticleById(c *gin.Context) {
 		Data:    article,
 	})
 
-
 }
 
 // getArticleList godoc
@@ -94,8 +92,8 @@ func (h handler) GetArticleById(c *gin.Context) {
 // @Router      /v1/article [get]
 func (h handler) GetArticleList(c *gin.Context) {
 
-	offsetStr := c.DefaultQuery("offset",h.Cfg.DefaultOffset)
-	limitStr := c.DefaultQuery("limit",h.Cfg.DefaultLimit)
+	offsetStr := c.DefaultQuery("offset", h.Cfg.DefaultOffset)
+	limitStr := c.DefaultQuery("limit", h.Cfg.DefaultLimit)
 	searchStr := c.DefaultQuery("search", "")
 
 	offset, err := strconv.Atoi(offsetStr)
@@ -204,5 +202,3 @@ func (h handler) DeleteArticle(c *gin.Context) {
 		Data:    article,
 	})
 }
-
-

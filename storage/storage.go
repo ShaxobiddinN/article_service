@@ -1,8 +1,8 @@
 package storage
 
-import "http-server/models"
+import "blogpost/article_service/models"
 
-type StorageI interface{
+type StorageI interface {
 	AddArticle(id string, entity models.CreateArticleModel) error
 	GetArticleById(id string) (models.PackedArticleModel, error)
 	GetArticleList(offset, limit int, search string) (resp []models.Article, err error)
@@ -11,7 +11,7 @@ type StorageI interface{
 
 	AddAuthor(id string, entity models.CreateAuthorModel) error
 	GetAuthorById(id string) (models.Author, error)
-	GetAuthorList(offset,limit int,search string) (resp []models.Author,err error)
+	GetAuthorList(offset, limit int, search string) (resp []models.Author, err error)
 	UpdateAuthor(entity models.UpdateAuthorModel) error
 	RemoveAuthor(id string) error
 }

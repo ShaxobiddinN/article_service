@@ -1,8 +1,8 @@
 package postgres
 
 import (
+	"blogpost/article_service/models"
 	"errors"
-	"http-server/models"
 )
 
 // AddAuthor...

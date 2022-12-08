@@ -1,4 +1,4 @@
-module http-server
+module blogpost/article_service
 
 go 1.19
 
