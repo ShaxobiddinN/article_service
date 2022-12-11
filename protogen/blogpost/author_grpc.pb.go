@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type AuthorServiceClient interface {
 	// Ping rpc
 	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Pong, error)
+	CreateAuthor(ctx context.Context, in *CreateAuthorRequest, opts ...grpc.CallOption) (*Author, error)
+	GetAuthorList(ctx context.Context, in *GetAuthorListRequest, opts ...grpc.CallOption) (*GetAuthorListResponse, error)
 }
 
 type authorServiceClient struct {
@@ -43,12 +45,32 @@ func (c *authorServiceClient) Ping(ctx context.Context, in *Empty, opts ...grpc.
 	return out, nil
 }
 
+func (c *authorServiceClient) CreateAuthor(ctx context.Context, in *CreateAuthorRequest, opts ...grpc.CallOption) (*Author, error) {
+	out := new(Author)
+	err := c.cc.Invoke(ctx, "/AuthorService/CreateAuthor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authorServiceClient) GetAuthorList(ctx context.Context, in *GetAuthorListRequest, opts ...grpc.CallOption) (*GetAuthorListResponse, error) {
+	out := new(GetAuthorListResponse)
+	err := c.cc.Invoke(ctx, "/AuthorService/GetAuthorList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthorServiceServer is the server API for AuthorService service.
 // All implementations must embed UnimplementedAuthorServiceServer
 // for forward compatibility
 type AuthorServiceServer interface {
 	// Ping rpc
 	Ping(context.Context, *Empty) (*Pong, error)
+	CreateAuthor(context.Context, *CreateAuthorRequest) (*Author, error)
+	GetAuthorList(context.Context, *GetAuthorListRequest) (*GetAuthorListResponse, error)
 	mustEmbedUnimplementedAuthorServiceServer()
 }
 
@@ -58,6 +80,12 @@ type UnimplementedAuthorServiceServer struct {
 
 func (UnimplementedAuthorServiceServer) Ping(context.Context, *Empty) (*Pong, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedAuthorServiceServer) CreateAuthor(context.Context, *CreateAuthorRequest) (*Author, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAuthor not implemented")
+}
+func (UnimplementedAuthorServiceServer) GetAuthorList(context.Context, *GetAuthorListRequest) (*GetAuthorListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuthorList not implemented")
 }
 func (UnimplementedAuthorServiceServer) mustEmbedUnimplementedAuthorServiceServer() {}
 
@@ -90,6 +118,42 @@ func _AuthorService_Ping_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthorService_CreateAuthor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAuthorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorServiceServer).CreateAuthor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AuthorService/CreateAuthor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorServiceServer).CreateAuthor(ctx, req.(*CreateAuthorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthorService_GetAuthorList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAuthorListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthorServiceServer).GetAuthorList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/AuthorService/GetAuthorList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthorServiceServer).GetAuthorList(ctx, req.(*GetAuthorListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthorService_ServiceDesc is the grpc.ServiceDesc for AuthorService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -100,6 +164,14 @@ var AuthorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Ping",
 			Handler:    _AuthorService_Ping_Handler,
+		},
+		{
+			MethodName: "CreateAuthor",
+			Handler:    _AuthorService_CreateAuthor_Handler,
+		},
+		{
+			MethodName: "GetAuthorList",
+			Handler:    _AuthorService_GetAuthorList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

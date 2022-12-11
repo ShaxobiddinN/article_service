@@ -33,7 +33,7 @@ import (
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
 
-func initGRPC(){
+func initGRPC(stg storage.StorageI){
 	println("gRPC server tutorial in Go")
 
 	listener, err := net.Listen("tcp", ":9000")
@@ -46,7 +46,7 @@ func initGRPC(){
 	authorService:=&author.AuthorService{}
 	blogpost.RegisterAuthorServiceServer(srv, authorService)
 
-	articleService:=&article.ArticleService{}
+	articleService:=article.NewArticleService(stg)
 	blogpost.RegisterArticleServiceServer(srv, articleService)
 
 	reflection.Register(srv)
@@ -57,9 +57,7 @@ func initGRPC(){
 }
 
 func main() {
-	 initGRPC()
 
-	fmt.Println("-------------------------------------------------->")
 
 	cfg := config.Load()
 
@@ -72,22 +70,26 @@ func main() {
 		cfg.PostgresDatabase,
 	)
 
-	docs.SwaggerInfo.Title = cfg.App
-	docs.SwaggerInfo.Version = cfg.AppVersion
-
 	var err error
 	var stg storage.StorageI
+
+	
 	stg, err = postgres.InitDb(psqlConnString)
 	if err != nil {
 		panic(err)
 	}
+	initGRPC(stg)
 
+	fmt.Println("-------------------------------------------------->")
+	
 	if cfg.Environment != "development" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	r := gin.New()
+	docs.SwaggerInfo.Title = cfg.App
+	docs.SwaggerInfo.Version = cfg.AppVersion
 
+	r := gin.New()
 	if cfg.Environment != "production" {
 		r.Use(gin.Logger(), gin.Recovery()) // Later they will be replaced by custom Logger and Recovery
 	}
