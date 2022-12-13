@@ -6,6 +6,7 @@ import (
 	blogpost "blogpost/article_service/protogen/blogpost"
 	"blogpost/article_service/storage"
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/google/uuid"
@@ -13,20 +14,19 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//ArticleService...
+// ArticleService...
 type articleService struct {
 	stg storage.StorageI
 	blogpost.UnimplementedArticleServiceServer
-} 
+}
 
-func NewArticleService(stg storage.StorageI) *articleService{
+func NewArticleService(stg storage.StorageI) *articleService {
 	return &articleService{
 		stg: stg,
 	}
 }
 
-
-//Ping ...
+// Ping ...
 func (s *articleService) Ping(ctx context.Context, req *blogpost.Empty) (*blogpost.Pong, error) {
 	log.Println("Pingg")
 	return &blogpost.Pong{
@@ -34,64 +34,65 @@ func (s *articleService) Ping(ctx context.Context, req *blogpost.Empty) (*blogpo
 	}, nil
 }
 
-//CreateArticle...
+// CreateArticle...
 func (s *articleService) CreateArticle(ctx context.Context, req *blogpost.CreateArticleRequest) (*blogpost.Article, error) {
 	id := uuid.New()
 	err := s.stg.AddArticle(id.String(), models.CreateArticleModel{
 		Content: models.Content{
 			Title: req.Content.Title,
-			Body: req.Content.Body,
+			Body:  req.Content.Body,
 		},
 		AuthorID: req.AuthorId,
 	})
 	if err != nil {
-		
-		return nil, status.Errorf(codes.Internal, "s.stg.AddArticle: %s",err.Error())
+
+		return nil, status.Errorf(codes.Internal, "s.stg.AddArticle: %s", err.Error())
 	}
 
 	article, err := s.stg.GetArticleById(id.String())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "s.stg.GetArticleById: %s",err.Error())
+		return nil, status.Errorf(codes.Internal, "s.stg.GetArticleById: %s", err.Error())
 
 	}
 
 	var updatedAt string
-	if article.UpdateAt !=nil{
+	if article.UpdateAt != nil {
 		updatedAt = article.UpdateAt.String()
-	} 
+	}
 
 	return &blogpost.Article{
 		Id: article.ID,
 		Content: &blogpost.Content{
 			Title: article.Title,
-			Body: article.Body,
+			Body:  article.Body,
 		},
-		AuthorId: article.GetAuthor.Id,
+		AuthorId:  article.GetAuthor.Id,
 		CreatedAt: article.CreatedAt.String(),
 		UpdatedAt: updatedAt,
-	},nil
+	}, nil
 }
-//UpdateArticle...
+
+// UpdateArticle...
 func (s *articleService) UpdateArticle(ctx context.Context, req *blogpost.UpdateArticleRequest) (*blogpost.Article, error) {
 	err := s.stg.UpdateArticle(models.UpdateArticleModel{
 		ID: req.Id,
 		Content: models.Content{
 			Title: req.Content.Title,
-			Body: req.Content.Body,
+			Body:  req.Content.Body,
 		},
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "s.stg.UpdateArticle: %s",err.Error())
+		return nil, status.Errorf(codes.Internal, "s.stg.UpdateArticle: %s", err.Error())
 
 	}
 
 	article, err := s.stg.GetArticleById(req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "s.stg.GetArticleById: %s",err.Error())
+		return nil, status.Errorf(codes.Internal, "s.stg.GetArticleById: %s", err.Error())
 	}
 
 	var updatedAt string
-	if article.UpdateAt !=nil{
+	if article.UpdateAt != nil {
 		updatedAt = article.UpdateAt.String()
 	}
 
@@ -99,108 +100,109 @@ func (s *articleService) UpdateArticle(ctx context.Context, req *blogpost.Update
 		Id: article.ID,
 		Content: &blogpost.Content{
 			Title: article.Title,
-			Body: article.Body,
+			Body:  article.Body,
 		},
-		AuthorId: article.GetAuthor.Id,
+		AuthorId:  article.GetAuthor.Id,
 		CreatedAt: article.CreatedAt.String(),
 		UpdatedAt: updatedAt,
-	},nil
+	}, nil
 }
 
-//DeleteArticle...
+// DeleteArticle...
 func (s *articleService) DeleteArticle(ctx context.Context, req *blogpost.DeleteArticleRequest) (*blogpost.Article, error) {
 	article, err := s.stg.GetArticleById(req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "s.stg.GetArticleById: %s",err.Error())
+		return nil, status.Errorf(codes.Internal, "s.stg.GetArticleById: %s", err.Error())
 	}
 
 	var updatedAt string
-	if article.UpdateAt !=nil{
+	if article.UpdateAt != nil {
 		updatedAt = article.UpdateAt.String()
 	}
 
-
 	err = s.stg.RemoveArticle(article.ID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "s.stg.DeleteArticle: %s",err.Error())
+		return nil, status.Errorf(codes.Internal, "s.stg.DeleteArticle: %s", err.Error())
 	}
-	
+
 	return &blogpost.Article{
 		Id: article.ID,
 		Content: &blogpost.Content{
 			Title: article.Title,
-			Body: article.Body,
+			Body:  article.Body,
 		},
-		AuthorId: article.GetAuthor.Id,
+		AuthorId:  article.GetAuthor.Id,
 		CreatedAt: article.CreatedAt.String(),
 		UpdatedAt: updatedAt,
-	},nil
+	}, nil
 }
-//GetArticleList...
+
+// GetArticleList...
 func (s *articleService) GetArticleList(ctx context.Context, req *blogpost.GetArticleListRequest) (*blogpost.GetArticleListResponse, error) {
-	 res := &blogpost.GetArticleListResponse{
+	fmt.Println("----------GetArticleList----------->")
 
-		 Articles:  make([]*blogpost.Article,0),
-	 }
+	res := &blogpost.GetArticleListResponse{
 
+		Articles: make([]*blogpost.Article, 0),
+	}
 
 	articleList, err := s.stg.GetArticleList(int(req.Offset), int(req.Limit), string(req.Search))
 	if err != nil {
-		return nil,status.Errorf(codes.Internal, "s.stg.DeleteArticle: %s",err.Error())
+		return nil, status.Errorf(codes.Internal, "s.stg.DeleteArticle: %s", err.Error())
 	}
 	for _, v := range articleList {
 		var updatedAt string
-	if v.UpdateAt !=nil{
-		updatedAt = v.UpdateAt.String()
-	}
+		if v.UpdateAt != nil {
+			updatedAt = v.UpdateAt.String()
+		}
 		res.Articles = append(res.Articles, &blogpost.Article{
-			
-				Id: v.ID,
-				Content: &blogpost.Content{
-					Title: v.Title,
-					Body: v.Body,
-				},
-				AuthorId: v.AuthorID,
-				CreatedAt: v.CreatedAt.String(),
-				UpdatedAt: updatedAt,
+
+			Id: v.ID,
+			Content: &blogpost.Content{
+				Title: v.Title,
+				Body:  v.Body,
+			},
+			AuthorId:  v.AuthorID,
+			CreatedAt: v.CreatedAt.String(),
+			UpdatedAt: updatedAt,
 		})
 	}
 	return res, nil
 }
 
-//GetArticleById...
+// GetArticleById...
 func (s *articleService) GetArticleById(ctx context.Context, req *blogpost.GetArticleByIdRequest) (*blogpost.GetArticleByIdResponse, error) {
 	article, err := s.stg.GetArticleById(req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "s.stg.GetArticleById: %s",err.Error())
+		return nil, status.Errorf(codes.Internal, "s.stg.GetArticleById: %s", err.Error())
 	}
 
-	if article.DeleteAt != nil{
-		return nil, status.Errorf(codes.NotFound, "s.stg.GetArticleById: %s",err.Error())
+	if article.DeleteAt != nil {
+		return nil, status.Errorf(codes.NotFound, "s.stg.GetArticleById: article with id: %s not found", req.Id)
 
 	}
 
 	var updatedAt string
-	if article.UpdateAt !=nil{
+	if article.UpdateAt != nil {
 		updatedAt = article.UpdateAt.String()
 	}
 	var authorupdatedAt string
-	if article.GetAuthor.UpdateAt !=nil{
+	if article.GetAuthor.UpdateAt != nil {
 		updatedAt = article.GetAuthor.UpdateAt.String()
 	}
 	return &blogpost.GetArticleByIdResponse{
 		Id: article.ID,
 		Content: &blogpost.Content{
 			Title: article.Title,
-			Body: article.Body,
+			Body:  article.Body,
 		},
 		Author: &blogpost.GetArticleByIdResponse_Author{
-			Id: article.GetAuthor.Id,
-			Fullname: article.GetAuthor.Fullname,
+			Id:        article.GetAuthor.Id,
+			Fullname:  article.GetAuthor.Fullname,
 			CreatedAt: article.CreatedAt.String(),
 			UpdatedAt: authorupdatedAt,
 		},
 		CreatedAt: article.CreatedAt.String(),
 		UpdatedAt: updatedAt,
-	},nil
+	}, nil
 }

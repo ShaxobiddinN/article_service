@@ -1,4 +1,3 @@
-
 package config
 
 import (
@@ -11,12 +10,11 @@ import (
 
 // Config ...
 type Config struct {
-	App string
-	AppVersion string
+	App         string
+	AppVersion  string
 	Environment string //development, staging, production
-	
-	ServiceHost string
-	HTTPPort    string
+
+	GRPCPort string
 
 	DefaultOffset string
 	DefaultLimit  string
@@ -26,7 +24,6 @@ type Config struct {
 	PostgresDatabase string
 	PostgresUser     string
 	PostgresPassword string
-
 }
 
 // Load ...
@@ -41,7 +38,7 @@ func Load() Config {
 	config.AppVersion = cast.ToString(getOrReturnDefaultValue("APP_VERSION", "1.0.0"))
 	config.Environment = cast.ToString(getOrReturnDefaultValue("ENVIRONMENT", "development"))
 
-	config.HTTPPort = cast.ToString(getOrReturnDefaultValue("HTTP_PORT", ":7070"))
+	config.GRPCPort = cast.ToString(getOrReturnDefaultValue("GRPC_PORT", ":9001"))
 
 	config.DefaultOffset = cast.ToString(getOrReturnDefaultValue("DEFAULT_OFFSET", "0"))
 	config.DefaultLimit = cast.ToString(getOrReturnDefaultValue("DEFAULT_LIMIT", "10"))

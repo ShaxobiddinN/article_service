@@ -1,20 +1,16 @@
 package postgres
 
 import (
-
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-
 )
 
-
-//InMemory...
- type Postgres struct{
+// InMemory...
+type Postgres struct {
 	db *sqlx.DB
+}
 
- }
-
-//InitDb...
+// InitDb...
 func InitDb(psqlConfig string) (*Postgres, error) {
 	var err error
 	//"user=admin password=postgres dbname=article_db sslmode=disable"
@@ -23,10 +19,7 @@ func InitDb(psqlConfig string) (*Postgres, error) {
 		return nil, err
 	}
 
-	return 	&Postgres{
+	return &Postgres{
 		db: tempDB,
-	},nil
+	}, nil
 }
-
-
-
