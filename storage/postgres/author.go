@@ -1,23 +1,19 @@
 package postgres
 
 import (
-	"blogpost/article_service/models"
+	"blogpost/article_service/protogen/blogpost"
 	"errors"
+	"time"
 )
 
 // AddAuthor...
-func (stg Postgres) AddAuthor(id string, entity models.CreateAuthorModel) error {
+func (stg Postgres) AddAuthor(id string, entity *blogpost.CreateAuthorRequest) error {
 
-	// fname:=entity.Firstname+entity.Lastname
 	_, err := stg.db.Exec(`INSERT INTO author 
 	(id,fullname) 
 	VALUES ($1, $2)`,
 		id,
 		entity.Fullname,
-		// entity.Firstname,
-		// entity.Lastname,
-		// entity.Middlename,
-
 	)
 	if err != nil {
 		return err
@@ -27,13 +23,12 @@ func (stg Postgres) AddAuthor(id string, entity models.CreateAuthorModel) error 
 }
 
 // GetAuthorById...
-func (stg Postgres) GetAuthorById(id string) (models.Author, error) {
-	var a models.Author
-	// var tempMiddlename *string
+func (stg Postgres) GetAuthorById(id string) (*blogpost.GetAuthorByIdResponse, error) {
+	result := &blogpost.GetAuthorByIdResponse{}
 
-	//firstname,
-	//lastname,
-	//middlename,
+	var deletedAt *time.Time
+	var updatedAt *string
+
 	err := stg.db.QueryRow(`SELECT 
 	id, 
 	fullname,
@@ -42,27 +37,35 @@ func (stg Postgres) GetAuthorById(id string) (models.Author, error) {
 	deleted_at
 	FROM author
 	WHERE id = $1`, id).Scan(
-		&a.Id,
-		&a.Fullname,
-		// &a.Firstname,
-		// &a.Lastname,
-		// &tempMiddlename,
-		&a.CreatedAt,
-		&a.UpdateAt,
-		&a.DeleteAt,
+		&result.Id,
+		&result.Fullname,
+		&result.CreatedAt,
+		&updatedAt,
+		&deletedAt,
+		// &result.DeleteAt,
 	)
 	if err != nil {
-		return a, err
+		return result, err
 	}
-	// if tempMiddlename != nil {
-	// 	a.Middlename = *tempMiddlename
-	// }
 
-	return a, nil
+	if updatedAt != nil {
+		result.UpdatedAt = *updatedAt
+	}
+
+	if deletedAt != nil {
+		return result, errors.New("article not found")
+	}
+
+	return result, nil
 }
 
 // GetAuthorList...
-func (stg Postgres) GetAuthorList(offset, limit int, search string) (resp []models.Author, err error) {
+func (stg Postgres) GetAuthorList(offset, limit int, search string) (*blogpost.GetAuthorListResponse, error) {
+	resp := &blogpost.GetAuthorListResponse{
+		Authors: make([]*blogpost.Author, 0),
+	}
+	var deletedAt *time.Time
+
 	rows, err := stg.db.Queryx(`SELECT 
 	id, 
 	fullname,
@@ -79,40 +82,41 @@ func (stg Postgres) GetAuthorList(offset, limit int, search string) (resp []mode
 	}
 
 	for rows.Next() {
-		var a models.Author
-
+		var a *blogpost.Author
+		var updatedAt *string
+		//------------------------bloomrpcda getauthlist qiganda otvorvotti----------------
 		err := rows.Scan(
 			&a.Id,
-			// &a.Firstname,
-			// &a.Lastname,
-			// &a.Middlename,
 			&a.Fullname,
 			&a.CreatedAt,
-			&a.UpdateAt,
-			&a.DeleteAt,
+			&updatedAt,
+			&deletedAt,
+			// &a.DeleteAt,
 		)
 		if err != nil {
 			return resp, err
 		}
-		resp = append(resp, a)
+
+		if updatedAt != nil {
+			a.UpdatedAt = *updatedAt
+		}
+		resp.Authors = append(resp.Authors, a)
 	}
+	//comment ochish extimoli bor
+	// if deletedAt != nil {
+	// 	return resp, errors.New("article not found")
+	// }
+
 	return resp, err
 }
 
 // UpdateAuthor...
-// firstname=:f,
-//
-//	lastname=:l,
-//	middlename =: m,
-func (stg Postgres) UpdateAuthor(entity models.UpdateAuthorModel) error {
+func (stg Postgres) UpdateAuthor(entity *blogpost.UpdateAuthorRequest) error {
 	res, err := stg.db.NamedExec(`
 	UPDATE  author SET 
 		fullname =:fn,
 		updated_at=now() 
 		WHERE id =:i AND deleted_at IS NULL `, map[string]interface{}{
-		// "f": entity.Firstname,
-		// "l": entity.Lastname,
-		// "m": entity.Middlename,
 		"fn": entity.Fullname,
 		"i":  entity.Id,
 	})

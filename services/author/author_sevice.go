@@ -1,7 +1,6 @@
 package author
 
 import (
-	"blogpost/article_service/models"
 	blogpost "blogpost/article_service/protogen/blogpost"
 	"blogpost/article_service/storage"
 	"context"
@@ -36,9 +35,7 @@ func (s *authorService) Ping(ctx context.Context, req *blogpost.Empty) (*blogpos
 // CreateAuthor...
 func (s *authorService) CreateAuthor(ctx context.Context, req *blogpost.CreateAuthorRequest) (*blogpost.Author, error) {
 	id := uuid.New()
-	err := s.stg.AddAuthor(id.String(), models.CreateAuthorModel{
-		Fullname: req.Fullname,
-	})
+	err := s.stg.AddAuthor(id.String(), req)
 	if err != nil {
 
 		return nil, status.Errorf(codes.Internal, "s.stg.AddAuthor: %s", err.Error())
@@ -50,25 +47,17 @@ func (s *authorService) CreateAuthor(ctx context.Context, req *blogpost.CreateAu
 
 	}
 
-	var updatedAt string
-	if author.UpdateAt != nil {
-		updatedAt = author.UpdateAt.String()
-	}
-
 	return &blogpost.Author{
 		Id:        author.Id,
 		Fullname:  author.Fullname,
-		CreatedAt: author.CreatedAt.String(),
-		UpdatedAt: updatedAt,
+		CreatedAt: author.CreatedAt,
+		UpdatedAt: author.UpdatedAt,
 	}, nil
 }
 
 // UpdateAuthor...
 func (s *authorService) UpdateAuthor(ctx context.Context, req *blogpost.UpdateAuthorRequest) (*blogpost.Author, error) {
-	err := s.stg.UpdateAuthor(models.UpdateAuthorModel{
-		Id:       req.Id,
-		Fullname: req.Fullname,
-	})
+	err := s.stg.UpdateAuthor(req)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "s.stg.UpdateAuthor: %s", err.Error())
 
@@ -79,16 +68,11 @@ func (s *authorService) UpdateAuthor(ctx context.Context, req *blogpost.UpdateAu
 		return nil, status.Errorf(codes.Internal, "s.stg.GetAuthorById: %s", err.Error())
 	}
 
-	var updatedAt string
-	if author.UpdateAt != nil {
-		updatedAt = author.UpdateAt.String()
-	}
-
 	return &blogpost.Author{
 		Id:        author.Id,
 		Fullname:  author.Fullname,
-		CreatedAt: author.CreatedAt.String(),
-		UpdatedAt: updatedAt, //.String() bolishi mumkin
+		CreatedAt: author.CreatedAt,
+		UpdatedAt: author.UpdatedAt,
 	}, nil
 }
 
@@ -99,11 +83,6 @@ func (s *authorService) DeleteAuthor(ctx context.Context, req *blogpost.DeleteAu
 		return nil, status.Errorf(codes.Internal, "s.stg.GetAuthorById: %s", err.Error())
 	}
 
-	var updatedAt string
-	if author.UpdateAt != nil {
-		updatedAt = author.UpdateAt.String()
-	}
-
 	err = s.stg.RemoveAuthor(author.Id)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "s.stg.DeleteAuthor: %s", err.Error())
@@ -112,8 +91,8 @@ func (s *authorService) DeleteAuthor(ctx context.Context, req *blogpost.DeleteAu
 	return &blogpost.Author{
 		Id:        author.Id,
 		Fullname:  author.Fullname,
-		CreatedAt: author.CreatedAt.String(),
-		UpdatedAt: updatedAt,
+		CreatedAt: author.CreatedAt,
+		UpdatedAt: author.UpdatedAt,
 	}, nil
 }
 
@@ -121,28 +100,11 @@ func (s *authorService) DeleteAuthor(ctx context.Context, req *blogpost.DeleteAu
 func (s *authorService) GetAuthorList(ctx context.Context, req *blogpost.GetAuthorListRequest) (*blogpost.GetAuthorListResponse, error) {
 	fmt.Println("----------GetAuthorList----------->")
 
-	res := &blogpost.GetAuthorListResponse{
-
-		Authors: make([]*blogpost.Author, 0),
-	}
-
-	authorList, err := s.stg.GetAuthorList(int(req.Offset), int(req.Limit), string(req.Search))
+	res, err := s.stg.GetAuthorList(int(req.Offset), int(req.Limit), string(req.Search))
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "s.stg.DeleteAuthor: %s", err.Error())
+		return nil, status.Errorf(codes.Internal, "s.stg.GetAuthorList: %s", err.Error())
 	}
-	for _, v := range authorList {
-		var updatedAt string
-		if v.UpdateAt != nil {
-			updatedAt = v.UpdateAt.String()
-		}
-		res.Authors = append(res.Authors, &blogpost.Author{
 
-			Id:        v.Id,
-			Fullname:  v.Fullname,
-			CreatedAt: v.CreatedAt.String(),
-			UpdatedAt: updatedAt,
-		})
-	}
 	return res, nil
 }
 
@@ -152,24 +114,5 @@ func (s *authorService) GetAuthorById(ctx context.Context, req *blogpost.GetAuth
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "s.stg.GetAuthorById: %s", err.Error())
 	}
-
-	if author.DeleteAt != nil {
-		return nil, status.Errorf(codes.NotFound, "s.stg.GetAuthorById: author with id: %s not found", req.Id)
-
-	}
-
-	var updatedAt string
-	if author.UpdateAt != nil {
-		updatedAt = author.UpdateAt.String()
-	}
-	// var authorupdatedAt string
-	// if author.GetAuthor.UpdateAt != nil {
-	// 	updatedAt = author.GetAuthor.UpdateAt.String()
-	// }
-	return &blogpost.GetAuthorByIdResponse{
-		Id:        author.Id,
-		Fullname:  author.Fullname,
-		CreatedAt: author.CreatedAt.String(),
-		UpdatedAt: updatedAt,
-	}, nil
+	return author, nil
 }
